@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LearnBuddyZoo</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            color: #333;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        .section h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        select, input, button {
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .reward-button {
+            background-color: #28a745;
+        }
+        .reward-button:hover {
+            background-color: #218838;
+        }
+        .close-button {
+            background-color: #6c757d;
+        }
+        .close-button:hover {
+            background-color: #5a6268;
+        }
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 100%;
+        }
+        .high-contrast {
+            background-color: black;
+            color: white;
+        }
+        .high-contrast .container {
+            background-color: #333;
+            color: white;
+        }
+        .high-contrast h1, .high-contrast h2 {
+            color: white;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress {
+            height: 20px;
+            background-color: #4caf50;
+            width: 0%;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div id="app" class="container">
+        <div id="welcome-section">
+            <h1>Welcome to LearnBuddyZoo!</h1>
+            <div class="section">
+                <label>Select your animal avatar:</label>
+                <select id="animal-select">
+                    <option value="Panda">Panda</option>
+                    <option value="Owl">Owl</option>
+                    <option value="Lion">Lion</option>
+                </select>
+            </div>
+            <div class="section">
+                <label>Name your avatar:</label>
+                <input type="text" id="avatar-name" placeholder="e.g., BluePanda">
+            </div>
+            <button id="create-avatar-button">Create Avatar</button>
+        </div>
+
+        <div id="dashboard-section" style="display: none;">
+            <h1>Learning Dashboard</h1>
+            <div class="grid">
+                <div class="section" id="avatar-display">
+                    <h2 id="avatar-title"></h2>
+                    <p id="avatar-details"></p>
+                    <p>Tokens: <span id="tokens">0</span></p>
+                </div>
+                <div class="section">
+                    <h2>Daily Goal</h2>
+                    <p>Activities Completed: <span id="activities-completed">0</span>/3</p>
+                    <div class="progress-bar">
+                        <div id="progress" class="progress"></div>
+                    </div>
+                    <button onclick="startMathGame()">Math Game</button>
+                    <button onclick="startSpellingGame()">Spelling Game</button>
+                    <button onclick="startAgreeDisagreeGame()">Agree/Disagree Game</button>
+                </div>
+                <div class="section">
+                    <h2>Reward Store</h2>
+                    <div class="reward">
+                        <p>30 Minutes Gaming (50 Tokens)</p>
+                        <button class="reward-button" onclick="redeemReward(50, '30 Minutes Gaming')">Redeem</button>
+                    </div>
+                    <div class="reward">
+                        <p>HKD 10 (100 Tokens)</p>
+                        <button class="reward-button" onclick="redeemReward(100, 'HKD 10')">Redeem</button>
+                    </div>
+                </div>
+                <div class="section">
+                    <h2>Settings</h2>
+                    <div>
+                        <label>Language:</label>
+                        <select id="language-select" onchange="changeLanguage()">
+                            <option value="en">English</option>
+                            <option value="zh">中文 (Chinese)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>High Contrast Mode:</label>
+                        <button id="contrast-button" onclick="toggleHighContrast()">Off</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="math-modal" class="modal">
+        <div class="modal-content">
+            <h2>Math Game</h2>
+            <p>2 + 3 = ?</p>
+            <input type="number" id="math-answer" placeholder="Answer">
+            <button onclick="submitMathAnswer()">Submit</button>
+            <button class="close-button" onclick="closeMathModal()">Close</button>
+        </div>
+    </div>
+
+    <div id="spelling-modal" class="modal">
+        <div class="modal-content">
+            <h2>Spelling Game</h2>
+            <p>Spell the word: <span id="spelling-word"></span></p>
+            <input type="text" id="spelling-answer" placeholder="Your answer">
+            <button onclick="submitSpellingAnswer()">Submit</button>
+            <button class="close-button" onclick="closeSpellingModal()">Close</button>
+        </div>
+    </div>
+
+    <div id="agree-disagree-modal" class="modal">
+        <div class="modal-content">
+            <h2>Agree/Disagree Game</h2>
+            <p id="agree-disagree-statement"></p>
+            <select id="agree-disagree-answer">
+                <option value="">Select an option</option>
+            </select>
+            <button onclick="submitAgreeDisagreeAnswer()">Submit</button>
+            <button class="close-button" onclick="closeAgreeDisagreeModal()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        let avatar = null;
+        let avatarName = '';
+        let tokens = 0;
+        let language = 'en';
+        let highContrast = false;
+        let dailyGoal = 3;
+        let activitiesCompleted = 0;
+        let currentSpellingWord = '';
+        let currentAgreeDisagreeStatement = null;
+
+        const translations = {
+            en: {
+                welcome: "Welcome to LearnBuddyZoo!",
+                selectAvatar: "Select your animal avatar:",
+                nameAvatar: "Name your avatar:",
+                createAvatar: "Create Avatar",
+                dashboard: "Learning Dashboard",
+                tokens: "Tokens",
+                rewardStore: "Reward Store",
+                dailyGoal: "Daily Goal",
+                activitiesCompleted: "Activities Completed",
+                mathGame: "Math Game",
+                spellingGame: "Spelling Game",
+                agreeDisagreeGame: "Agree/Disagree Game",
+                answer: "Answer",
+                correct: "Correct!",
+                incorrect: "Incorrect, try again!",
+                redeem: "Redeem",
+                parentApproval: "Awaiting Parent Approval...",
+                language: "Language",
+                highContrast: "High Contrast Mode",
+                on: "On",
+                off: "Off",
+                agree: "I agree because...",
+                disagree: "I disagree because...",
+                statement1: "The sky is blue.",
+                statement2: "Ice cream is better than chocolate.",
+                statement3: "Cats are the best pets."
+            },
+            zh: {
+                welcome: "欢迎体验LearnBuddyZoo！",
+                selectAvatar: "选择你的动物头像：",
+                nameAvatar: "给你的头像命名：",
+                createAvatar: "创建头像",
+                dashboard: "学习仪表板",
+                tokens: "代币",
+                rewardStore: "奖励商店",
+                dailyGoal: "每日目标",
+                activitiesCompleted: "已完成活动",
+                mathGame: "数学游戏",
+                spellingGame: "拼写游戏",
+                agreeDisagreeGame: "同意/不同意游戏",
+                answer: "答案",
+                correct: "正确！",
+                incorrect: "错误，请再试！",
+                redeem: "兑换",
+                parentApproval: "等待家长批准...",
+                language: "语言",
+                highContrast: "高对比度模式",
+                on: "开启",
+                off: "关闭",
+                agree: "我同意因为...",
+                disagree: "我不同意因为...",
+                statement1: "天空是蓝色的。",
+                statement2: "冰淇淋比巧克力好。",
+                statement3: "猫是最好的宠物。"
+            },
+        };
+
+        const spellingWords = {
+            en: [
+                { word: "cat", hint: "A common pet that meows" },
+                { word: "dog", hint: "A common pet that barks" },
+                { word: "sun", hint: "The bright star in the sky" },
+            ],
+            zh: [
+                { word: "猫", hint: "一种会喵喵叫的宠物" },
+                { word: "狗", hint: "一种会汪汪叫的宠物" },
+                { word: "太阳", hint: "天空中明亮的星星" },
+            ],
+        };
+
+        const agreeDisagreeStatements = {
+            en: [
+                { statement: "statement1", correct: "agree" },
+                { statement: "statement2", correct: "disagree" },
+                { statement: "statement3", correct: "agree" },
+            ],
+            zh: [
+                { statement: "statement1", correct: "agree" },
+                { statement: "statement2", correct: "disagree" },
+                { statement: "statement3", correct: "agree" },
+            ],
+        };
+
+        function createAvatar() {
+            const animal = document.getElementById('animal-select').value;
+            avatarName = document.getElementById('avatar-name').value || 'Anonymous';
+            const colors = ['Blue', 'Green', 'Purple'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            avatar = { animal, color };
+
+            document.getElementById('welcome-section').style.display = 'none';
+            document.getElementById('dashboard-section').style.display = 'block';
+
+            document.getElementById('avatar-title').textContent = avatarName;
+            document.getElementById('avatar-details').textContent = `${avatar.color} ${avatar.animal}`;
+            updateProgress();
+            updateLanguage();
+        }
+
+        function startMathGame() {
+            document.getElementById('math-modal').style.display = 'flex';
+            document.querySelector('#math-modal h2').textContent = translations[language].mathGame;
+            document.querySelector('#math-modal p').textContent = "2 + 3 = ?";
+            document.querySelector('#math-modal input').placeholder = translations[language].answer;
+            document.querySelector('#math-modal button:nth-child(3)').textContent = "Submit";
+            document.querySelector('#math-modal .close-button').textContent = "Close";
+        }
+
+        function submitMathAnswer() {
+            const answer = document.getElementById('math-answer').value;
+            const correctAnswer = 5;
+            if (parseInt(answer) === correctAnswer) {
+                tokens += 5;
+                activitiesCompleted += 1;
+                document.getElementById('tokens').textContent = tokens;
+                document.getElementById('activities-completed').textContent = activitiesCompleted;
+                alert(`${avatarName} says: ${translations[language].correct} You earned 5 tokens!`);
+                closeMathModal();
+                updateProgress();
+            } else {
+                alert(`${avatarName} says: ${translations[language].incorrect}`);
+            }
+        }
+
+        function closeMathModal() {
+            document.getElementById('math-modal').style.display = 'none';
+            document.getElementById('math-answer').value = '';
+        }
+
+        function startSpellingGame() {
+            const words = spellingWords[language];
+            const randomIndex = Math.floor(Math.random() * words.length);
+            currentSpellingWord = words[randomIndex].word;
+            document.getElementById('spelling-word').textContent = words[randomIndex].hint;
+            document.getElementById('spelling-modal').style.display = 'flex';
+            document.querySelector('#spelling-modal h2').textContent = translations[language].spellingGame;
+            document.querySelector('#spelling-modal p').textContent = `Spell the word: ${words[randomIndex].hint}`;
+            document.querySelector('#spelling-modal input').placeholder = translations[language].answer;
+            document.querySelector('#spelling-modal button:nth-child(4)').textContent = "Submit";
+            document.querySelector('#spelling-modal .close-button').textContent = "Close";
+        }
+
+        function submitSpellingAnswer() {
+            const answer = document.getElementById('spelling-answer').value.trim().toLowerCase();
+            const correctAnswer = currentSpellingWord.toLowerCase();
+            if (answer === correctAnswer) {
+                tokens += 5;
+                activitiesCompleted += 1;
+                document.getElementById('tokens').textContent = tokens;
+                document.getElementById('activities-completed').textContent = activitiesCompleted;
+                alert(`${avatarName} says: ${translations[language].correct} You earned 5 tokens!`);
+                closeSpellingModal();
+                updateProgress();
+            } else {
+                alert(`${avatarName} says: ${translations[language].incorrect}`);
+            }
+        }
+
+        function closeSpellingModal() {
+            document.getElementById('spelling-modal').style.display = 'none';
+            document.getElementById('spelling-answer').value = '';
+        }
+
+        function startAgreeDisagreeGame() {
+            const statements = agreeDisagreeStatements[language];
+            const randomIndex = Math.floor(Math.random() * statements.length);
+            currentAgreeDisagreeStatement = statements[randomIndex];
+            document.getElementById('agree-disagree-statement').textContent = translations[language][currentAgreeDisagreeStatement.statement];
+            const select = document.getElementById('agree-disagree-answer');
+            select.innerHTML = `
+                <option value="">Select an option</option>
+                <option value="agree">${translations[language].agree}</option>
+                <option value="disagree">${translations[language].disagree}</option>
+            `;
+            document.getElementById('agree-disagree-modal').style.display = 'flex';
+            document.querySelector('#agree-disagree-modal h2').textContent = translations[language].agreeDisagreeGame;
+            document.querySelector('#agree-disagree-modal button:nth-child(3)').textContent = "Submit";
+            document.querySelector('#agree-disagree-modal .close-button').textContent = "Close";
+        }
+
+        function submitAgreeDisagreeAnswer() {
+            const answer = document.getElementById('agree-disagree-answer').value;
+            if (answer === currentAgreeDisagreeStatement.correct) {
+                tokens += 5;
+                activitiesCompleted += 1;
+                document.getElementById('tokens').textContent = tokens;
+                document.getElementById('activities-completed').textContent = activitiesCompleted;
+                alert(`${avatarName} says: ${translations[language].correct} You earned 5 tokens!`);
+                closeAgreeDisagreeModal();
+                updateProgress();
+            } else {
+                alert(`${avatarName} says: ${translations[language].incorrect}`);
+            }
+        }
+
+        function closeAgreeDisagreeModal() {
+            document.getElementById('agree-disagree-modal').style.display = 'none';
+            document.getElementById('agree-disagree-answer').value = '';
+        }
+
+        function redeemReward(cost, rewardName) {
+            if (tokens >= cost) {
+                tokens -= cost;
+                document.getElementById('tokens').textContent = tokens;
+                alert(translations[language].parentApproval);
+            } else {
+                alert(`You need ${cost - tokens} more tokens!`);
+            }
+        }
+
+        function changeLanguage() {
+            language = document.getElementById('language-select').value;
+            updateLanguage();
+        }
+
+        function toggleHighContrast() {
+            highContrast = !highContrast;
+            document.body.classList.toggle('high-contrast');
+            document.getElementById('contrast-button').textContent = highContrast ? translations[language].off : translations[language].on;
+        }
+
+        function updateProgress() {
+            const progressPercent = (activitiesCompleted / dailyGoal) * 100;
+            document.getElementById('progress').style.width = `${progressPercent}%`;
+            if (activitiesCompleted >= dailyGoal) {
+                alert("Great job! You've completed your daily goal!");
+            }
+        }
+
+        function updateLanguage() {
+            document.querySelector('#welcome-section h1').textContent = translations[language].welcome;
+            document.querySelector('#welcome-section label[for="animal-select"]').textContent = translations[language].selectAvatar;
+            document.querySelector('#welcome-section label[for="avatar-name"]').textContent = translations[language].nameAvatar;
+            document.querySelector('#welcome-section button').textContent = translations[language].createAvatar;
+
+            document.querySelector('#dashboard-section h1').textContent = translations[language].dashboard;
+            document.querySelector('#avatar-display p:last-child').textContent = `${translations[language].tokens}: ${tokens}`;
+            document.querySelector('#dashboard-section .section:nth-child(2) h2').textContent = translations[language].dailyGoal;
+            document.querySelector('#dashboard-section .section:nth-child(2) p').textContent = `${translations[language].activitiesCompleted}: ${activitiesCompleted}/${dailyGoal}`;
+            document.querySelector('#dashboard-section .section:nth-child(2) button:nth-child(4)').textContent = translations[language].mathGame;
+            document.querySelector('#dashboard-section .section:nth-child(2) button:nth-child(5)').textContent = translations[language].spellingGame;
+            document.querySelector('#dashboard-section .section:nth-child(2) button:nth-child(6)').textContent = translations[language].agreeDisagreeGame;
+            document.querySelector('#dashboard-section .section:nth-child(3) h2').textContent = translations[language].rewardStore;
+            document.querySelector('#dashboard-section .section:nth-child(3) .reward:nth-child(1) p').textContent = `30 Minutes Gaming (50 ${translations[language].tokens})`;
+            document.querySelector('#dashboard-section .section:nth-child(3) .reward:nth-child(1) button').textContent = translations[language].redeem;
+            document.querySelector('#dashboard-section .section:nth-child(3) .reward:nth-child(2) p').textContent = `HKD 10 (100 ${translations[language].tokens})`;
+            document.querySelector('#dashboard-section .section:nth-child(3) .reward:nth-child(2) button').textContent = translations[language].redeem;
+            document.querySelector('#dashboard-section .section:nth-child(4) h2').textContent = "Settings";
+            document.querySelector('#dashboard-section .section:nth-child(4) label[for="language-select"]').textContent = translations[language].language;
+            document.querySelector('#dashboard-section .section:nth-child(4) label[for="contrast-button"]').textContent = translations[language].highContrast;
+            document.getElementById('contrast-button').textContent = highContrast ? translations[language].off : translations[language].on;
+        }
+
+        document.getElementById('create-avatar-button').addEventListener('click', createAvatar);
+    </script>
+</body>
+</html>
